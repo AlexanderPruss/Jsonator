@@ -4,8 +4,6 @@ import (
 	"fmt"
 )
 
-const tagSplitter = "."
-
 func main() {
 
 	fmt.Println("Marshaling 'foo' with my own marshaller, hot damn")
