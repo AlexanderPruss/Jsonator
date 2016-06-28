@@ -28,15 +28,16 @@ func marshalAndUnmarshal(t *testing.T, v interface{}, tagId string) *gabs.Contai
 
 func TestDefaultMarshal(t *testing.T) {
 	type testStruct struct {
-		Value      string `jsonator:"nonexistentMap.value"`
-		OtherValue int    `jsonator:"renamedValue"`
+		Value        string   `jsonator:"nonexistentMap.value"`
+		OtherValue   int      `jsonator:"renamedValue"`
+		DoArraysWork []string `jsonator:"nonexistentMap.list"`
 	}
 
-	foo := testStruct{"value", 10}
+	foo := testStruct{"value", 10, []string{"foo", "bar"}}
 	container := marshalAndUnmarshal(t, foo, "")
-
 	assert.Equal(t, foo.Value, container.Search("nonexistentMap", "value").Data())
 	assert.EqualValues(t, foo.OtherValue, container.Search("renamedValue").Data())
+	assert.Equal(t, []interface{}{"foo", "bar"}, container.Search("nonexistentMap", "list").Data())
 }
 
 func TestMarshal_EncodingJsonTagsIgnored(t *testing.T) {

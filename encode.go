@@ -11,6 +11,12 @@ func DefaultMarshal(v interface{}) ([]byte, error) {
 	return Marshal(v, "")
 }
 
+//Marshals an object to JSON using the default "jsonator" tag.
+func DefaultMarshalIndent(v interface{}, prefix, indent string) ([]byte, error) {
+
+	return MarshalIndent(v, "", prefix, indent)
+}
+
 //Marshals an object to JSON using the "jsonator_tagId" tag.
 func Marshal(v interface{}, tagId string) ([]byte, error) {
 
@@ -21,8 +27,19 @@ func Marshal(v interface{}, tagId string) ([]byte, error) {
 	return container.Bytes(), err
 }
 
+//Marshals an object to JSON using the "jsonator_tagId" tag.
+func MarshalIndent(v interface{}, tagId, prefix, indent string) ([]byte, error) {
+
+	container, err := marshal(v, gabs.New(), tagId)
+	if err != nil {
+		return nil, err
+	}
+	return container.BytesIndent(prefix, indent), err
+}
+
 //Iterates through the fields of a struct. Recurses into any struct fields found.
 func marshal(v interface{}, container *gabs.Container, tagId string, currentPath ...string) (*gabs.Container, error) {
+	//todo: probably nicer to have this take a value in the interface
 	val := reflect.ValueOf(v)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
@@ -44,6 +61,7 @@ func marshal(v interface{}, container *gabs.Container, tagId string, currentPath
 		isStruct := false
 		var structValAsInterface interface{}
 
+		//todo: ugly as hell, make it better. or a method. or both
 		if valueField.Kind() == reflect.Interface {
 			isStruct = true
 			if valueField.Elem().Kind() == reflect.Struct {
