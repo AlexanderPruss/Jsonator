@@ -1,7 +1,6 @@
 package Jsonator
 
 import (
-	_ "fmt"
 	"github.com/Jeffail/gabs"
 	"reflect"
 )
@@ -44,9 +43,14 @@ func marshal(v interface{}, container *gabs.Container, tagId string, currentPath
 		//TODO: Prevent infinite loops. Perhaps have an encoder object that saves encoding state?
 		isStruct := false
 		var structValAsInterface interface{}
-		if valueField.Kind() == reflect.Interface && valueField.Elem().Kind() == reflect.Ptr && valueField.Elem().Elem().Kind() == reflect.Struct {
+
+		if valueField.Kind() == reflect.Interface {
 			isStruct = true
-			structValAsInterface = valueField.Elem().Elem().Interface()
+			if valueField.Elem().Kind() == reflect.Struct {
+				structValAsInterface = valueField.Elem().Interface()
+			} else {
+				structValAsInterface = valueField.Elem().Elem().Interface()
+			}
 		} else if valueField.Kind() == reflect.Ptr && valueField.Elem().Kind() == reflect.Struct {
 			isStruct = true
 			structValAsInterface = valueField.Elem().Interface()
