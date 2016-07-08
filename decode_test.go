@@ -29,7 +29,7 @@ func (s innerStruct) String() string {
 
 func TestDefaultUnmarshal(t *testing.T) {
 
-	//TODO: get maps to work, split this test up into smaller, more readables ones ala encode_test.go
+	//TODO:split this test up into smaller, more readables ones ala encode_test.go
 
 	type testStruct struct {
 		Value            *string `jsonator:"nonexistentMap.value"`
@@ -70,4 +70,38 @@ func TestDefaultUnmarshal(t *testing.T) {
 	assert.Equal(t, expectedValue, *unmarshalTarget)
 }
 
-//todo: test passing in a non-pointer
+func TestUnmarshal_breaksWhenInputtingNonPointerTarget(t *testing.T) {
+
+	//TODO:split this test up into smaller, more readables ones ala encode_test.go
+
+	type testStruct struct {
+		Value            *string `jsonator:"nonexistentMap.value"`
+		OtherValue       int     `jsonator:"renamedValue"`
+		ASlice           []string
+		AnArray          [2]string
+		AMap             map[string]interface{}
+		InStruct         innerStruct
+		AnInterface      interface{}
+		WontMapInterface fmt.Stringer
+	}
+
+	json := `
+	{
+		"nonexistentMap":{"value":"value"},
+		"renamedValue":10,
+		"ASlice":[
+		"foo",
+		"bar"],
+		"AnArray":[
+		"array1",
+		"array2"],
+		"AMap":{"mapKey":"mapValue"},
+		"InStruct":{"InnerStructVal":"innerValue"},
+		"AnInterface":{"InnerStructVal":"interfaceValue"},
+		"WontMapInterface":{"InnerStructVal":"wontMap"}
+	}`
+
+	unmarshalTarget := testStruct{}
+	err := DefaultUnmarshal([]byte(json), unmarshalTarget)
+	assert.NotNil(t, err)
+}

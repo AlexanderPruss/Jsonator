@@ -1,6 +1,13 @@
 Copyright (c) 2016 Alexander Pruss
 
-*This project has not yet had a first release. In particular, unmarshalling maps isn't working yet.*
+*This project has not yet had a first release. More unnecessarily clever tags for mapping to and from collections are coming, as is custom marshalling/unmarshalling.*
+
+*Missing features:*
+
++ *Custom Marshalling/Unmarshalling interfaces.*
++ *Tags for encoding/decoding maps with keys that aren't strings.*
++ *Tags for encoding/decoding multiple separate fields into/from a single array.*
+
 
 Jsonator is a utility for mapping Go objects to and from multiple different JSON formats.
 

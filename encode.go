@@ -11,7 +11,7 @@ func DefaultMarshal(v interface{}) ([]byte, error) {
 	return Marshal(v, "")
 }
 
-//Marshals an object to JSON using the default "jsonator" tag.
+//Marshals an object to JSON using the default "jsonator" tag, but with pretty indentation.
 func DefaultMarshalIndent(v interface{}, prefix, indent string) ([]byte, error) {
 
 	return MarshalIndent(v, "", prefix, indent)
@@ -37,7 +37,7 @@ func MarshalIndent(v interface{}, tagId, prefix, indent string) ([]byte, error) 
 	return container.BytesIndent(prefix, indent), err
 }
 
-//Iterates through the fields of a struct. Recurses into any struct fields found.
+//Iterates through the fields of a struct, marshalling them in turn. Recurses into any struct fields found.
 func marshal(v interface{}, container *gabs.Container, tagId string, currentPath ...string) (*gabs.Container, error) {
 	//todo: probably nicer to have this take a value in the interface
 	val := reflect.ValueOf(v)

@@ -1,29 +1,31 @@
 package Jsonator
 
 import (
-	"fmt"
 	"github.com/Jeffail/gabs"
 	"reflect"
+	"errors"
 )
 
-//not yet implemented
+//Unmarshals a JSON to the input pointer v using the "jsonator" tag.
 func DefaultUnmarshal(data []byte, v interface{}) error {
 	return Unmarshal(data, v, "")
 }
 
-//not yet implemented
+//Unmarshals a JSON to the input pointer v using the "jsonator" tag, but with pretty indentation.
 func Unmarshal(data []byte, v interface{}, tagId string) error {
-	//TODO: check that we're sending in a pointer? Or just let it crash when the value isn't settable?
-	//TODO: What does encoding/json do?
+	val := reflect.ValueOf(v)
+	if(val.Kind()!=reflect.Ptr){
+		return errors.New("Unmarshalling requires the target interface value to be a pointer.")
+	}
 
 	container, err := gabs.ParseJSON(data)
 	if err != nil {
 		return err
 	}
-	return unmarshal(reflect.ValueOf(v).Elem(), container, tagId)
+	return unmarshal(val.Elem(), container, tagId)
 }
 
-//not yet implemented
+//Iterates through the fields of a struct, marshalling them in turn. Recurses into any struct fields found.
 func unmarshal(val reflect.Value, container *gabs.Container, tagId string, currentPath ...string) error {
 	currentType := val.Type()
 	for fieldIndex := 0; fieldIndex < currentType.NumField(); fieldIndex++ {
@@ -45,8 +47,10 @@ func unmarshal(val reflect.Value, container *gabs.Container, tagId string, curre
 	return nil
 }
 
-//TODO: Ugly interface. Maybe hide container and tagId into an object and turns this into a method?
+
+//Sets the value of the JSON Value to the reflection value. Potentially requires recursing into subvalues.
 func setValue(val reflect.Value, jsonValue interface{}, container *gabs.Container, tagId string, currentPath ...string) {
+	//TODO: Ugly interface. Maybe hide container and tagId into an object and turns this into a method?
 	switch val.Kind() {
 	case reflect.Array, reflect.Map, reflect.Slice:
 		setCollectionValue(val, jsonValue, container, tagId, currentPath...)
@@ -76,6 +80,7 @@ func setValue(val reflect.Value, jsonValue interface{}, container *gabs.Containe
 	}
 }
 
+//Helper method for setting collection values, as collection reflection is somewhat complicated in GO, even before custom tags get involved.
 func setCollectionValue(val reflect.Value, jsonValue interface{}, container *gabs.Container, tagId string, currentPath ...string) {
 	switch val.Kind() {
 	case reflect.Array:
@@ -88,20 +93,20 @@ func setCollectionValue(val reflect.Value, jsonValue interface{}, container *gab
 		mapValueType := val.Type().Elem()
 		mapKeyType := val.Type().Key()
 		stringType := reflect.ValueOf("").Type()
-		if mapKeyType != stringType { //we can only map maps with string keys
+		if mapKeyType != stringType { //we can only map maps with string keys //TODO: Until we get more clever with tags!
 			break
 		}
 
 		mapType := reflect.MapOf(mapKeyType, mapValueType)
-		mapPointer := reflect.New(mapType)
-		mapValue := mapPointer.Elem()
-		fmt.Printf("map value type:%v\n", mapValue.Type)
+		mapValue := reflect.MakeMap(mapType)
+
 		for key, value := range jsonValue.(map[string]interface{}) {
 			mapKeyValue := reflect.ValueOf(key)
 			mapValuePointer := reflect.New(mapValueType)
-			setValue(mapValuePointer, value, container, tagId, currentPath...) //TODO: Unadressable values X_X
-			val.SetMapIndex(mapKeyValue, mapValuePointer.Elem())
+			setValue(mapValuePointer.Elem(), value, container, tagId, currentPath...)
+			mapValue.SetMapIndex(mapKeyValue, mapValuePointer.Elem())
 		}
+		val.Set(mapValue)
 
 	case reflect.Slice:
 		sliceVal := reflect.MakeSlice(val.Type(), 0, 0)
